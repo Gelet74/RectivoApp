@@ -77,7 +77,7 @@ fun Login(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Label Usuario
             Text(
@@ -157,7 +157,7 @@ fun Login(
 
             // o continuar con
             Text(
-                text = "o continuar con",
+                text = "O continuar con",
                 fontSize = 12.sp,
                 color = Color(0xFFFF5722)
             )
@@ -217,7 +217,7 @@ fun Login(
             }
 
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // ¿Olvidaste tu contraseña?
             TextButton(onClick = onNavigateToForgotPassword) {
@@ -228,7 +228,7 @@ fun Login(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // ¿No tienes una cuenta? Regístrate
             Row (modifier = Modifier,

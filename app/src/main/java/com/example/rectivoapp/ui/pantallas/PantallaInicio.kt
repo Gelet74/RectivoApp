@@ -41,7 +41,7 @@ fun PantallaInicio(
         }
         launch {
             scale.animateTo(
-                targetValue = 2F,
+                targetValue = 1.5F,
                 animationSpec = tween(4000)
             )
         }
