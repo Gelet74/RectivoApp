@@ -4,12 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.example.rectivoapp.ui.pantallas.Login
-import com.example.rectivoapp.ui.pantallas.PantallaInicio
+import androidx.navigation.compose.rememberNavController
+import com.example.rectivoapp.ui.navegacion.NavGraph
 import com.rectivo.ui.theme.RectivoTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,23 +15,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RectivoTheme {
-
-                var mostrarLogin by remember { mutableStateOf(false) }
-
-
-                if (mostrarLogin) {
-                    Login()
-                } else {
-                    PantallaInicio(
-                        onFinish = {
-                            mostrarLogin = true
-                        }
-                    )
-                }
+                val navController = rememberNavController()
+                NavGraph(navController = navController)
             }
         }
     }
 }
-
-
-
