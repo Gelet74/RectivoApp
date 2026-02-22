@@ -26,9 +26,13 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.serialization.json.Json
+import com.example.rectivoapp.modelo.Cliente
+import com.example.rectivoapp.ui.RectivoViewModel
 
 @Composable
 fun Login(
+    viewModel: RectivoViewModel,
     onNavigateToRegister: () -> Unit = {},
     onNavigateToForgotPassword: () -> Unit = {},
     onLoginSuccess: () -> Unit = {}
@@ -159,7 +163,7 @@ fun Login(
                         try {
                             val resultado = withContext(Dispatchers.IO) {
                                 val client = OkHttpClient()
-                                val json = """{"username":"$usuario","password":"$contrasena"}"""
+                                val json = """{"username":"${usuario.trim()}","password":"${contrasena.trim()}"}"""
                                 val body = json.toRequestBody("application/json".toMediaType())
                                 val request = Request.Builder()
                                     .url("http://192.168.0.25:3000/login")
@@ -168,6 +172,10 @@ fun Login(
                                 client.newCall(request).execute()
                             }
                             if (resultado.isSuccessful) {
+                                val jsonParser = Json { ignoreUnknownKeys = true }
+                                val body = resultado.body?.string() ?: "{}"
+                                val cliente = jsonParser.decodeFromString<Cliente>(body)
+                                viewModel.guardarCliente(cliente)
                                 onLoginSuccess()
                             } else {
                                 errorMsg = when (resultado.code) {
@@ -176,7 +184,8 @@ fun Login(
                                 }
                             }
                         } catch (e: Exception) {
-                            errorMsg = "No se pudo conectar al servidor."
+                            errorMsg = "No se pudo conectar: ${e.message}"
+                            android.util.Log.e("LOGIN_ERROR", "Error al conectar", e)
                         } finally {
                             cargando = false
                         }
@@ -209,8 +218,6 @@ fun Login(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-
-
             TextButton(onClick = onNavigateToForgotPassword) {
                 Text(
                     text = "¿Olvidaste tu contraseña?",
@@ -222,7 +229,6 @@ fun Login(
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
-                modifier = Modifier,
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
