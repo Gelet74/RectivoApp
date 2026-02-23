@@ -89,7 +89,7 @@ fun PantallaPerfil(
                                 val body = jsonObj.toString()
                                     .toRequestBody("application/json".toMediaType())
                                 val request = Request.Builder()
-                                    .url("http://192.168.0.25:3000/clientes/$clienteId")
+                                    .url("http://192.168.0.25:8080/clientes/$clienteId")
                                     .put(body)
                                     .build()
                                 client.newCall(request).execute()

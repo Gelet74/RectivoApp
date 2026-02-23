@@ -15,7 +15,7 @@ interface ContenedorApp {
 
 class ProductoContenedorApp : ContenedorApp {
 
-    private val baseUrl = "http://192.168.0.25:3000/"
+    private val baseUrl = "http://192.168.0.25:8080/"
 
 
 

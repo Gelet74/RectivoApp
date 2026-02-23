@@ -166,7 +166,7 @@ fun Login(
                                 val json = """{"username":"${usuario.trim()}","password":"${contrasena.trim()}"}"""
                                 val body = json.toRequestBody("application/json".toMediaType())
                                 val request = Request.Builder()
-                                    .url("http://192.168.0.25:3000/login")
+                                    .url("http://192.168.0.25:8080/cliente/login")
                                     .post(body)
                                     .build()
                                 client.newCall(request).execute()
