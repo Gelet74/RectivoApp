@@ -4,7 +4,6 @@ import com.example.rectivoapp.R
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,15 +18,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import kotlinx.serialization.json.Json
-import com.example.rectivoapp.modelo.Cliente
 import com.example.rectivoapp.ui.RectivoViewModel
 
 @Composable
@@ -39,9 +29,9 @@ fun Login(
 ) {
     var usuario by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
-    var errorMsg by remember { mutableStateOf("") }
-    var cargando by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+
+    val errorMsg by viewModel.loginError.collectAsState()
+    val cargando by viewModel.loginCargando.collectAsState()
 
     Box(
         modifier = Modifier
@@ -153,43 +143,8 @@ fun Login(
 
             Button(
                 onClick = {
-                    if (usuario.isBlank() || contrasena.isBlank()) {
-                        errorMsg = "Por favor, rellena todos los campos."
-                        return@Button
-                    }
-                    scope.launch {
-                        cargando = true
-                        errorMsg = ""
-                        try {
-                            val resultado = withContext(Dispatchers.IO) {
-                                val client = OkHttpClient()
-                                val json = """{"username":"${usuario.trim()}","password":"${contrasena.trim()}"}"""
-                                val body = json.toRequestBody("application/json".toMediaType())
-                                val request = Request.Builder()
-                                    .url("http://192.168.0.25:8080/cliente/login")
-                                    .post(body)
-                                    .build()
-                                client.newCall(request).execute()
-                            }
-                            if (resultado.isSuccessful) {
-                                val jsonParser = Json { ignoreUnknownKeys = true }
-                                val body = resultado.body?.string() ?: "{}"
-                                val cliente = jsonParser.decodeFromString<Cliente>(body)
-                                viewModel.guardarCliente(cliente)
-                                onLoginSuccess()
-                            } else {
-                                errorMsg = when (resultado.code) {
-                                    401 -> "Usuario o contraseña incorrectos."
-                                    else -> "Error del servidor (${resultado.code})."
-                                }
-                            }
-                        } catch (e: Exception) {
-                            errorMsg = "No se pudo conectar: ${e.message}"
-                            android.util.Log.e("LOGIN_ERROR", "Error al conectar", e)
-                        } finally {
-                            cargando = false
-                        }
-                    }
+                    if (usuario.isBlank() || contrasena.isBlank()) return@Button
+                    viewModel.login(usuario.trim(), contrasena.trim(), onLoginSuccess)
                 },
                 enabled = !cargando,
                 modifier = Modifier

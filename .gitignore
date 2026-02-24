@@ -1,15 +1,31 @@
+# Archivos de IntelliJ / Android Studio
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.idea/
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Archivos de Gradle
+.gradle/
+build/
+externalNativeBuild/
+.cxx/
+
+# Archivos locales
 local.properties
+/local.properties
+
+# Archivos del sistema
+.DS_Store
+
+# Carpetas de capturas
+captures/
+
+# Otros
+*.log
+
+app/src/main/java/com/example/rectivoapp/datos/ContenedorApp.kt
+

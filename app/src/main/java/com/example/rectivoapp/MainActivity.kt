@@ -11,7 +11,11 @@ import com.example.rectivoapp.ui.RectivoViewModel
 import com.rectivo.ui.theme.RectivoTheme
 
 class MainActivity : ComponentActivity() {
-    private val rectivoViewModel: RectivoViewModel by viewModels()
+
+    private val rectivoViewModel: RectivoViewModel by viewModels {
+        val app = application as RectivoAplicacion
+        RectivoViewModel.factory(app.contenedor.clienteRepositorio)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

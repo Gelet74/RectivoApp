@@ -154,6 +154,7 @@ fun NavGraph(
             val cliente by viewModel.cliente.collectAsState()
             cliente?.let {
                 PantallaPerfil(
+                    viewModel = viewModel,
                     clienteId = it.id,
                     nombreInicial = it.nombre,
                     apellido1Inicial = it.apellido1,

@@ -12,18 +12,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.rectivoapp.modelo.ClienteUpdateRequest
+import com.example.rectivoapp.ui.RectivoViewModel
 import com.example.rectivoapp.ui.navegacion.PantallaConAppBar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
 
 @Composable
 fun PantallaPerfil(
+    viewModel: RectivoViewModel,
     clienteId: Int,
     nombreInicial: String,
     apellido1Inicial: String,
@@ -37,9 +32,9 @@ fun PantallaPerfil(
     var apellido2 by remember { mutableStateOf(apellido2Inicial) }
     var dni by remember { mutableStateOf(dniInicial) }
     var telefono by remember { mutableStateOf(telefonoInicial) }
-    var mensaje by remember { mutableStateOf("") }
-    var cargando by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+
+    val mensaje by viewModel.perfilMensaje.collectAsState()
+    val cargando by viewModel.perfilCargando.collectAsState()
 
     PantallaConAppBar(titulo = "Mi Perfil", onVolver = onVolver) {
         Column(
@@ -74,37 +69,16 @@ fun PantallaPerfil(
 
             Button(
                 onClick = {
-                    scope.launch {
-                        cargando = true
-                        mensaje = ""
-                        try {
-                            val resultado = withContext(Dispatchers.IO) {
-                                val client = OkHttpClient()
-                                val jsonObj = JSONObject()
-                                jsonObj.put("nombre", nombre.trim())
-                                jsonObj.put("apellido1", apellido1.trim())
-                                jsonObj.put("apellido2", apellido2.trim())
-                                jsonObj.put("dni", dni.trim())
-                                jsonObj.put("telefono", telefono.trim())
-                                val body = jsonObj.toString()
-                                    .toRequestBody("application/json".toMediaType())
-                                val request = Request.Builder()
-                                    .url("http://192.168.0.25:8080/clientes/$clienteId")
-                                    .put(body)
-                                    .build()
-                                client.newCall(request).execute()
-                            }
-                            mensaje = if (resultado.isSuccessful) {
-                                "Datos actualizados correctamente ✓"
-                            } else {
-                                "Error al actualizar (${resultado.code})"
-                            }
-                        } catch (e: Exception) {
-                            mensaje = "Error: no se pudo conectar al servidor"
-                        } finally {
-                            cargando = false
-                        }
-                    }
+                    viewModel.actualizarPerfil(
+                        id = clienteId,
+                        datos = ClienteUpdateRequest(
+                            nombre = nombre.trim(),
+                            apellido1 = apellido1.trim(),
+                            apellido2 = apellido2.trim(),
+                            dni = dni.trim(),
+                            telefono = telefono.trim()
+                        )
+                    )
                 },
                 enabled = !cargando,
                 modifier = Modifier
