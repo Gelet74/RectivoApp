@@ -40,7 +40,7 @@ fun PantallaSeleccionPuertas(
 
             TarjetaCategoria(
                 titulo = "1 Puerta",
-                imagenRes = R.drawable.blanco_40_50,
+                imagenRes = R.drawable.rojo_40_50,
                 onClick = on1Puerta
             )
 
@@ -48,7 +48,7 @@ fun PantallaSeleccionPuertas(
 
             TarjetaCategoria(
                 titulo = "2 Puertas",
-                imagenRes = R.drawable.blanco_80_100,
+                imagenRes = R.drawable.negro_80_100,
                 onClick = on2Puertas
             )
         }
