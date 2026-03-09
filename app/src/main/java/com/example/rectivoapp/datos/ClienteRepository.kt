@@ -9,6 +9,8 @@ import retrofit2.Response
 interface ClienteRepositorio {
     suspend fun login(username: String, password: String): Cliente
     suspend fun actualizarCliente(id: Int, datos: ClienteUpdateRequest): Response<Unit>
+    suspend fun registro(cliente: Cliente): Cliente
+    suspend fun recuperarPassword(dni: String, nuevaPassword: String): Response<Unit>
 }
 
 class ConexionClienteRepositorio(
@@ -20,4 +22,10 @@ class ConexionClienteRepositorio(
 
     override suspend fun actualizarCliente(id: Int, datos: ClienteUpdateRequest): Response<Unit> =
         api.actualizarCliente(id, datos)
+
+    override suspend fun registro(cliente: Cliente): Cliente =
+        api.registro(cliente)
+
+    override suspend fun recuperarPassword(dni: String, nuevaPassword: String): Response<Unit> =
+        api.recuperarPassword(dni, nuevaPassword)
 }

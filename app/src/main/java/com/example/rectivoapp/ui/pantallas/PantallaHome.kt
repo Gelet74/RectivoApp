@@ -17,7 +17,8 @@ fun PantallaHome(
     onRealizarPedido: () -> Unit = {},
     onMisPedidos: () -> Unit = {},
     onMiPerfil: () -> Unit = {},
-    onContacto: () -> Unit = {}
+    onContacto: () -> Unit = {},
+    onCerrarSesion: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -49,6 +50,8 @@ fun PantallaHome(
         BotonMenu(texto = "👤  Mi perfil", onClick = onMiPerfil)
         Spacer(modifier = Modifier.height(16.dp))
         BotonMenu(texto = "📞  Contacto", onClick = onContacto)
+        Spacer(modifier = Modifier.height(16.dp))
+        BotonMenu(texto = "🚪  Cerrar sesión", onClick = onCerrarSesion)
     }
 }
 

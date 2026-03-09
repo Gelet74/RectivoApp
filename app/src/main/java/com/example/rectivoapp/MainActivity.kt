@@ -14,7 +14,9 @@ class MainActivity : ComponentActivity() {
 
     private val rectivoViewModel: RectivoViewModel by viewModels {
         val app = application as RectivoAplicacion
-        RectivoViewModel.factory(app.contenedor.clienteRepositorio)
+        RectivoViewModel.factory(
+            app.contenedor.clienteRepositorio,
+            app.contenedor.pedidoRepositorio)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

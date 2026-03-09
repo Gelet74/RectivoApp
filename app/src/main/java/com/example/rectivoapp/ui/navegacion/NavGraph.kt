@@ -15,6 +15,8 @@ object Rutas {
 
     const val LOGIN = "login"
     const val HOME = "home"
+    const val REGISTRO = "registro"
+    const val RECUPERAR_PASSWORD = "recuperarpassword"
     const val SELECCION_PUERTAS = "seleccionpuertas"
     const val ARMARIO_1_PUERTA = "armario1puerta"
     const val SELECCION_MEDIDA = "seleccionmedida/{puertas}"
@@ -42,19 +44,44 @@ fun NavGraph(
                     navController.navigate(Rutas.HOME) {
                         popUpTo(Rutas.LOGIN) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToRegister = { navController.navigate(Rutas.REGISTRO) },
+                onNavigateToForgotPassword = { navController.navigate(Rutas.RECUPERAR_PASSWORD) }
+            )
+        }
+
+        composable(Rutas.REGISTRO) {
+            PantallaRegistro(
+                viewModel = viewModel,
+                onRegistroExito = {
+                    navController.navigate(Rutas.HOME) {
+                        popUpTo(Rutas.LOGIN) { inclusive = true }
+                    }
+                },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rutas.RECUPERAR_PASSWORD) {
+            PantallaRecuperarPassword(
+                viewModel = viewModel,
+                onExito = { navController.popBackStack() },
+                onVolver = { navController.popBackStack() }
             )
         }
 
         composable(Rutas.HOME) {
             PantallaHome(
-                onRealizarPedido = {
-                    viewModel.resetearSeleccion()
-                    navController.navigate(Rutas.SELECCION_PUERTAS)
-                },
+                onRealizarPedido = { navController.navigate(Rutas.SELECCION_PUERTAS) },
                 onMisPedidos = { /* TODO */ },
                 onMiPerfil = { navController.navigate(Rutas.PERFIL) },
-                onContacto = { navController.navigate(Rutas.CONTACTO) }
+                onContacto = { navController.navigate(Rutas.CONTACTO) },
+                onCerrarSesion = {
+                    viewModel.cerrarSesion()
+                    navController.navigate(Rutas.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -97,8 +124,15 @@ fun NavGraph(
             PantallaResumenPedido(
                 seleccion = seleccion,
                 onVolver = { navController.popBackStack() },
-                onConfirmar = {
-                    // TODO - enviar pedido al servidor
+                onConfirmar = { fecha ->
+                    viewModel.confirmarPedido(
+                        fechaEntrega = fecha,
+                        onExito = {
+                            navController.navigate(Rutas.HOME) {
+                                popUpTo(Rutas.HOME) { inclusive = false }
+                            }
+                        }
+                    )
                 }
             )
         }

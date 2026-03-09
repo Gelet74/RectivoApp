@@ -21,13 +21,29 @@ import androidx.compose.ui.unit.sp
 import com.example.rectivoapp.R
 import com.example.rectivoapp.modelo.SeleccionPedido
 import com.example.rectivoapp.ui.navegacion.PantallaConAppBar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaResumenPedido(
     seleccion: SeleccionPedido,
     onVolver: () -> Unit = {},
-    onConfirmar: () -> Unit = {}
+    onConfirmar: (String) -> Unit = {}
 ) {
+    var mostrarDatePicker by remember { mutableStateOf(false) }
+    var fechaEntregaSeleccionada by remember { mutableStateOf<LocalDate?>(null) }
+    val fechaMinima = LocalDate.now().plusDays(7)
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = fechaMinima
+            .atStartOfDay(ZoneId.of("UTC"))
+            .toInstant()
+            .toEpochMilli()
+    )
+
     val nombreColor = { codigo: String ->
         when (codigo) {
             "B" -> "Blanco"
@@ -46,7 +62,6 @@ fun PantallaResumenPedido(
     val esEspejado = seleccion.puertas == 1 && seleccion.apertura == "derecha"
 
     val imagenRes = when {
-        // 2 puertas
         seleccion.colorEstructura == "B" && seleccion.colorPuerta == "B" && seleccion.puertas == 2 -> R.drawable.blanco_80_100
         seleccion.colorEstructura == "B" && seleccion.colorPuerta == "N" && seleccion.puertas == 2 -> R.drawable.blanco_negro_80_100
         seleccion.colorEstructura == "B" && seleccion.colorPuerta == "R" && seleccion.puertas == 2 -> R.drawable.blanco_rojo_80_100
@@ -56,7 +71,6 @@ fun PantallaResumenPedido(
         seleccion.colorEstructura == "R" && seleccion.colorPuerta == "R" && seleccion.puertas == 2 -> R.drawable.rojo_80_100
         seleccion.colorEstructura == "R" && seleccion.colorPuerta == "B" && seleccion.puertas == 2 -> R.drawable.rojo_blanco_80_100
         seleccion.colorEstructura == "R" && seleccion.colorPuerta == "N" && seleccion.puertas == 2 -> R.drawable.rojo_negro_80_100
-        // 1 puerta (izquierda y derecha comparten imagen, la derecha se espeja)
         seleccion.colorEstructura == "B" && seleccion.colorPuerta == "B" -> R.drawable.blanco_40_50
         seleccion.colorEstructura == "B" && seleccion.colorPuerta == "N" -> R.drawable.blanco_negro_40_50
         seleccion.colorEstructura == "B" && seleccion.colorPuerta == "R" -> R.drawable.blanco_rojo_40_50
@@ -129,16 +143,57 @@ fun PantallaResumenPedido(
             FilaResumen(titulo = "Color puerta", valor = nombreColor(seleccion.colorPuerta ?: ""))
             FilaResumen(titulo = "Cantidad", valor = "${seleccion.cantidad} unidad${if (seleccion.cantidad == 1) "" else "es"}")
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            // Botón para seleccionar fecha de entrega
+            val fechaTexto = fechaEntregaSeleccionada
+                ?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                ?: "Seleccionar fecha de entrega"
+
+            OutlinedButton(
+                onClick = { mostrarDatePicker = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFFFF5722)
+                )
+            ) {
+                Text(
+                    text = fechaTexto,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Mensaje de error si la fecha es inválida
+            if (mostrarDatePicker.not() && fechaEntregaSeleccionada == null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Debes seleccionar una fecha mínimo 7 días desde hoy",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón confirmar — desactivado hasta que haya fecha
             Button(
-                onClick = onConfirmar,
+                onClick = {
+                    fechaEntregaSeleccionada?.let {
+                        onConfirmar(it.format(DateTimeFormatter.ISO_LOCAL_DATE))
+                    }
+                },
+                enabled = fechaEntregaSeleccionada != null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF5722)
+                    containerColor = Color(0xFFFF5722),
+                    disabledContainerColor = Color(0xFF888888)
                 )
             ) {
                 Text(
@@ -167,6 +222,38 @@ fun PantallaResumenPedido(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+
+    // DatePickerDialog
+    if (mostrarDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { mostrarDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val millis = datePickerState.selectedDateMillis
+                        if (millis != null) {
+                            val fecha = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.of("UTC"))
+                                .toLocalDate()
+                            if (!fecha.isBefore(fechaMinima)) {
+                                fechaEntregaSeleccionada = fecha
+                                mostrarDatePicker = false
+                            }
+                        }
+                    }
+                ) {
+                    Text("Aceptar", color = Color(0xFFFF5722))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDatePicker = false }) {
+                    Text("Cancelar", color = Color(0xFFFF5722))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
