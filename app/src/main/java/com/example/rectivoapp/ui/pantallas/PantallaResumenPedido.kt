@@ -225,6 +225,8 @@ fun PantallaResumenPedido(
         }
     }
 
+    Spacer(modifier = Modifier.height(64.dp))
+
     // DatePickerDialog
     if (mostrarDatePicker) {
         DatePickerDialog(

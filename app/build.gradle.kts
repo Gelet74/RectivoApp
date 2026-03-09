@@ -73,7 +73,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.compose.foundation.layout)
 
-    coreLibraryDesugaring("com.android.tools.desugar_jdk_libs:desugar_jdk_libs:1.2.3")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
