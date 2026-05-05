@@ -86,12 +86,16 @@ fun NavGraph(
         }
 
         composable(Rutas.MIS_PEDIDOS) {
-            val pedidos by viewModel.pedidosServidor.collectAsState()
+            val pedidos by viewModel.pedidosMisPedidos.collectAsState()
             val cargando by viewModel.pedidosCargando.collectAsState()
+            val modoOffline by viewModel.pedidosModoOffline.collectAsState()
+
             LaunchedEffect(Unit) { viewModel.cargarPedidosCliente() }
+
             PantallaMisPedidos(
                 pedidos = pedidos,
                 cargando = cargando,
+                modoOffline = modoOffline,
                 onVolver = { navController.popBackStack() }
             )
         }

@@ -71,12 +71,20 @@ class RectivoViewModel(
     private val _carrito = MutableStateFlow<List<LineaCarrito>>(emptyList())
     val carrito: StateFlow<List<LineaCarrito>> = _carrito.asStateFlow()
 
-    // ── Pedidos del servidor ──
-    private val _pedidosServidor = MutableStateFlow<List<Pedido>>(emptyList())
-    val pedidosServidor: StateFlow<List<Pedido>> = _pedidosServidor.asStateFlow()
+    // ── Pedidos para MisPedidos (servidor con fallback a Room) ──
+    private val _pedidosMisPedidos = MutableStateFlow<List<Pedido>>(emptyList())
+    val pedidosMisPedidos: StateFlow<List<Pedido>> = _pedidosMisPedidos.asStateFlow()
 
     private val _pedidosCargando = MutableStateFlow(false)
     val pedidosCargando: StateFlow<Boolean> = _pedidosCargando.asStateFlow()
+
+    // true = datos vinieron del servidor, false = vinieron de Room (sin conexión)
+    private val _pedidosModoOffline = MutableStateFlow(false)
+    val pedidosModoOffline: StateFlow<Boolean> = _pedidosModoOffline.asStateFlow()
+
+    // ── Pedidos del servidor (mantenido por compatibilidad) ──
+    private val _pedidosServidor = MutableStateFlow<List<Pedido>>(emptyList())
+    val pedidosServidor: StateFlow<List<Pedido>> = _pedidosServidor.asStateFlow()
 
     // ── Login ──
     private val _loginError = MutableStateFlow("")
@@ -194,18 +202,66 @@ class RectivoViewModel(
         }
     }
 
-    // ── Pedidos del servidor ──
+    // ── Cargar pedidos para MisPedidos con fallback offline ──
     fun cargarPedidosCliente() {
         val idCliente = _cliente.value?.id ?: return
         viewModelScope.launch {
             _pedidosCargando.value = true
             try {
-                _pedidosServidor.value = pedidoRepositorio.getPedidosByCliente(idCliente)
+                // 1. Intentar cargar del servidor
+                val pedidosApi = pedidoRepositorio.getPedidosByCliente(idCliente)
+
+                // 2. Si hay datos del servidor, sincronizar Room con ellos
+                sincronizarPedidosEnRoom(idCliente, pedidosApi)
+
+                // 3. Mostrar los datos del servidor
+                _pedidosMisPedidos.value = pedidosApi
+                _pedidosServidor.value = pedidosApi
+                _pedidosModoOffline.value = false
+
             } catch (e: Exception) {
-                _pedidosServidor.value = emptyList()
+                // 4. Sin conexión: cargar desde Room
+                android.util.Log.w("PEDIDOS", "Sin conexión, cargando desde Room: ${e.message}")
+                val pedidosLocales = pedidoRepositorioBD.obtenerPedidosPorUsuario(idCliente)
+
+                // 5. Convertir PedidoBD → Pedido para reutilizar la UI existente
+                _pedidosMisPedidos.value = pedidosLocales.map { bd ->
+                    Pedido(
+                        id = bd.id,
+                        idCliente = bd.usuarioId,
+                        fechaPedido = bd.fecha,
+                        fechaEntrega = bd.fecha,
+                        estado = "Sin conexión",
+                        total = bd.precioTotal
+                    )
+                }
+                _pedidosModoOffline.value = true
             } finally {
                 _pedidosCargando.value = false
             }
+        }
+    }
+
+    // Guarda en Room los pedidos recibidos del servidor para este usuario
+    private suspend fun sincronizarPedidosEnRoom(idCliente: Int, pedidosApi: List<Pedido>) {
+        try {
+            pedidosApi.forEach { pedido ->
+                pedidoRepositorioBD.insertar(
+                    PedidoBD(
+                        id = pedido.id,
+                        usuarioId = idCliente,
+                        productoId = 0,
+                        productoDescripcion = "",
+                        productoCodigo = "",
+                        cantidad = 0,
+                        precioUnitario = 0.0,
+                        precioTotal = pedido.total,
+                        fecha = pedido.fechaEntrega ?: pedido.fechaPedido
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ROOM_SYNC", "Error al sincronizar Room: ${e.message}")
         }
     }
 
@@ -253,6 +309,8 @@ class RectivoViewModel(
     fun cerrarSesion() {
         _cliente.value = null
         limpiarCarrito()
+        _pedidosMisPedidos.value = emptyList()
+        _pedidosModoOffline.value = false
     }
 
     // ── Registro ──

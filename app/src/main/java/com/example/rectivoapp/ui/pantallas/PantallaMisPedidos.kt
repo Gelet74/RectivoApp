@@ -20,6 +20,7 @@ import com.example.rectivoapp.ui.navegacion.PantallaConAppBar
 fun PantallaMisPedidos(
     pedidos: List<Pedido>,
     cargando: Boolean,
+    modoOffline: Boolean = false,
     onVolver: () -> Unit = {}
 ) {
     PantallaConAppBar(titulo = "Mis Pedidos", onVolver = onVolver) {
@@ -27,24 +28,62 @@ fun PantallaMisPedidos(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF2D2D30))
-                .padding(16.dp)
         ) {
-            if (cargando) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFFFF5722))
-                }
-            } else if (pedidos.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // ── Banner sin conexión ──
+            if (modoOffline) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF5C3317))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        text = "No tienes pedidos todavía.",
-                        color = Color.White,
-                        fontSize = 16.sp
+                        text = "📵  Sin conexión — mostrando datos guardados",
+                        color = Color(0xFFFFCC80),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(pedidos) { pedido ->
-                        TarjetaPedido(pedido = pedido)
+            }
+
+            // ── Contenido ──
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                when {
+                    cargando -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFFFF5722))
+                        }
+                    }
+                    pedidos.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (modoOffline)
+                                    "No hay pedidos guardados localmente."
+                                else
+                                    "No tienes pedidos todavía.",
+                                color = Color.White,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                    else -> {
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(pedidos) { pedido ->
+                                TarjetaPedido(pedido = pedido)
+                            }
+                        }
                     }
                 }
             }
@@ -74,10 +113,11 @@ fun TarjetaPedido(pedido: Pedido) {
                 Text(
                     text = pedido.estado,
                     color = when (pedido.estado) {
-                        "Pendiente" -> Color(0xFFFFB300)
-                        "EnCurso" -> Color(0xFF29B6F6)
-                        "Cerrada" -> Color(0xFF66BB6A)
-                        else -> Color.White
+                        "Pendiente"    -> Color(0xFFFFB300)
+                        "EnCurso"      -> Color(0xFF29B6F6)
+                        "Cerrada"      -> Color(0xFF66BB6A)
+                        "Sin conexión" -> Color(0xFFAAAAAA)
+                        else           -> Color.White
                     },
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
