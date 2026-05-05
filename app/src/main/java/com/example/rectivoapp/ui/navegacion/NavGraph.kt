@@ -40,6 +40,7 @@ fun NavGraph(
 
         composable(Rutas.LOGIN) {
             Login(
+                viewModel = viewModel,
                 onLoginSuccess = {
                     navController.navigate(Rutas.HOME) {
                         popUpTo(Rutas.LOGIN) { inclusive = true }
@@ -86,15 +87,21 @@ fun NavGraph(
         }
 
         composable(Rutas.MIS_PEDIDOS) {
-            val pedidos by viewModel.pedidosMisPedidos.collectAsState()
-            val cargando by viewModel.pedidosCargando.collectAsState()
+            // Usamos UIStatePedidosBD que trabaja con PedidoBD (datos completos)
+            val uiState = viewModel.uiStatePedidosBD
             val modoOffline by viewModel.pedidosModoOffline.collectAsState()
 
-            LaunchedEffect(Unit) { viewModel.cargarPedidosCliente() }
+            LaunchedEffect(Unit) {
+                viewModel.cargarPedidosCliente()   // intenta API → si falla usa Room
+                viewModel.obtenerPedidosBD()       // carga Room para la UI
+            }
 
             PantallaMisPedidos(
-                pedidos = pedidos,
-                cargando = cargando,
+                pedidos = when (val s = uiState) {
+                    is com.example.rectivoapp.ui.UIStatePedidosBD.Exito -> s.pedidos
+                    else -> emptyList()
+                },
+                cargando = uiState is com.example.rectivoapp.ui.UIStatePedidosBD.Cargando,
                 modoOffline = modoOffline,
                 onVolver = { navController.popBackStack() }
             )

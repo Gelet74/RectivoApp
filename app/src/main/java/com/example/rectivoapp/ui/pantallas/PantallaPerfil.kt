@@ -42,6 +42,7 @@ fun PantallaPerfil(
                 .fillMaxSize()
                 .background(Color(0xFF2D2D30))
                 .padding(24.dp)
+                .padding(top=100.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(16.dp))

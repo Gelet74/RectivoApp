@@ -35,7 +35,7 @@ fun PantallaSeleccionPuertas(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp, top = 50.dp)
             )
 
             TarjetaCategoria(

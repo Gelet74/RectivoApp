@@ -13,12 +13,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.rectivoapp.modelo.Pedido
+import com.example.rectivoapp.modelo.PedidoBD
 import com.example.rectivoapp.ui.navegacion.PantallaConAppBar
 
 @Composable
 fun PantallaMisPedidos(
-    pedidos: List<Pedido>,
+    pedidos: List<PedidoBD>,
     cargando: Boolean,
     modoOffline: Boolean = false,
     onVolver: () -> Unit = {}
@@ -35,7 +35,8 @@ fun PantallaMisPedidos(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFF5C3317))
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .padding(top = 50.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -49,40 +50,38 @@ fun PantallaMisPedidos(
             }
 
             // ── Contenido ──
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                when {
-                    cargando -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = Color(0xFFFF5722))
-                        }
+            when {
+                cargando -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFFFF5722))
                     }
-                    pedidos.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (modoOffline)
-                                    "No hay pedidos guardados localmente."
-                                else
-                                    "No tienes pedidos todavía.",
-                                color = Color.White,
-                                fontSize = 16.sp
-                            )
-                        }
+                }
+                pedidos.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (modoOffline)
+                                "No hay pedidos guardados localmente."
+                            else
+                                "No tienes pedidos todavía.",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
                     }
-                    else -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(pedidos) { pedido ->
-                                TarjetaPedido(pedido = pedido)
-                            }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(pedidos) { pedido ->
+                            TarjetaPedidoBD(pedido = pedido)
                         }
                     }
                 }
@@ -92,7 +91,7 @@ fun PantallaMisPedidos(
 }
 
 @Composable
-fun TarjetaPedido(pedido: Pedido) {
+fun TarjetaPedidoBD(pedido: PedidoBD) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -100,41 +99,105 @@ fun TarjetaPedido(pedido: Pedido) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+
+            // ── Cabecera: nº pedido + fecha ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Pedido #${pedido.id}",
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFFFF5722),
                     fontSize = 16.sp
                 )
                 Text(
-                    text = pedido.estado,
-                    color = when (pedido.estado) {
-                        "Pendiente"    -> Color(0xFFFFB300)
-                        "EnCurso"      -> Color(0xFF29B6F6)
-                        "Cerrada"      -> Color(0xFF66BB6A)
-                        "Sin conexión" -> Color(0xFFAAAAAA)
-                        else           -> Color.White
-                    },
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    text = pedido.fecha,
+                    color = Color(0xFFAAAAAA),
+                    fontSize = 12.sp
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Fecha: ${pedido.fechaPedido}", color = Color.White, fontSize = 14.sp)
-            pedido.fechaEntrega?.let {
-                Text(text = "Entrega: $it", color = Color.White, fontSize = 14.sp)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Total: ${"%.2f".format(pedido.total)} €",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp),
+                color = Color(0xFF555558)
             )
+
+            // ── Código del producto ──
+            if (pedido.productoCodigo.isNotEmpty()) {
+                FilaPedido("Código", pedido.productoCodigo)
+            }
+
+            // ── Descripción ──
+            if (pedido.productoDescripcion.isNotEmpty()) {
+                FilaPedido("Descripción", pedido.productoDescripcion)
+            }
+
+            // ── Cantidad ──
+            if (pedido.cantidad > 0) {
+                FilaPedido(
+                    "Cantidad",
+                    "${pedido.cantidad} unidad${if (pedido.cantidad == 1) "" else "es"}"
+                )
+            }
+
+            // ── Precio unitario ──
+            if (pedido.precioUnitario > 0.0) {
+                FilaPedido("Precio unitario", "${"%.2f".format(pedido.precioUnitario)} €")
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color(0xFF555558)
+            )
+
+            // ── Total ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFFF5722), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Total",
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${"%.2f".format(pedido.precioTotal)} €",
+                    fontSize = 18.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun FilaPedido(etiqueta: String, valor: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = etiqueta,
+            fontSize = 13.sp,
+            color = Color(0xFFFF5722),
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = valor,
+            fontSize = 13.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

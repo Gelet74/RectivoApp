@@ -19,15 +19,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.rectivoapp.ui.RectivoViewModel
 
 @Composable
 fun Login(
+    viewModel: RectivoViewModel,
     onNavigateToRegister: () -> Unit = {},
     onNavigateToForgotPassword: () -> Unit = {},
     onLoginSuccess: () -> Unit = {}
 ) {
     var usuario by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
+    val loginError by viewModel.loginError.collectAsState()
+    val loginCargando by viewModel.loginCargando.collectAsState()
 
     Box(
         modifier = Modifier
@@ -43,14 +47,14 @@ fun Login(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Logo (placeholder por ahora)
+            // Logo
             Box(
                 modifier = Modifier
                     .size(120.dp)
                     .background(Color.White, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Image (
+                Image(
                     painter = painterResource(R.drawable.rectivo_logo_sintexto),
                     contentDescription = "Logo sin texto",
                     modifier = Modifier.size(120.dp)
@@ -59,7 +63,6 @@ fun Login(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Título
             Text(
                 text = "recTivo",
                 fontSize = 32.sp,
@@ -69,7 +72,6 @@ fun Login(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtítulo
             Text(
                 text = "Tu Tienda de Armarios\nModerna y Elegante",
                 fontSize = 14.sp,
@@ -79,7 +81,6 @@ fun Login(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Label Usuario
             Text(
                 text = "Usuario",
                 fontSize = 14.sp,
@@ -89,7 +90,6 @@ fun Login(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Campo Usuario
             OutlinedTextField(
                 value = usuario,
                 onValueChange = { usuario = it },
@@ -99,14 +99,13 @@ fun Login(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedBorderColor = Color (0xFFFF5722),
-                    unfocusedBorderColor = Color (0xFFFF5722)
+                    focusedBorderColor = Color(0xFFFF5722),
+                    unfocusedBorderColor = Color(0xFFFF5722)
                 )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Label Contraseña
             Text(
                 text = "Contraseña",
                 fontSize = 14.sp,
@@ -116,7 +115,6 @@ fun Login(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Campo Contraseña
             OutlinedTextField(
                 value = contrasena,
                 onValueChange = { contrasena = it },
@@ -134,30 +132,50 @@ fun Login(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Iniciar sesión
             Button(
-                onClick = { onLoginSuccess() },
+                onClick = {
+                    viewModel.login(usuario, contrasena, onExito = onLoginSuccess)
+                },
+                enabled = !loginCargando,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE0E0E0)
+                    containerColor = Color(0xFFE0E0E0),
+                    disabledContainerColor = Color(0xFF888888)
                 )
             ) {
+                if (loginCargando) {
+                    CircularProgressIndicator(
+                        color = Color(0xFFFF5722),
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Iniciar sesión",
+                        color = Color(0xFFFF5722),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Mensaje de error
+            if (loginError.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Iniciar sesión",
-                    color = Color(0xFFFF5722),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = loginError,
+                    color = Color(0xFFFF5555),
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // ¿Olvidaste tu contraseña?
             TextButton(onClick = onNavigateToForgotPassword) {
                 Text(
                     text = "¿Olvidaste tu contraseña?",
@@ -168,11 +186,11 @@ fun Login(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ¿No tienes una cuenta? Regístrate
-            Row (modifier = Modifier,
+            Row(
+                modifier = Modifier,
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Text(
                     text = "¿No tienes una cuenta? ",
                     color = Color(0xFFFF5722),
@@ -186,7 +204,6 @@ fun Login(
                         text = "Regístrate",
                         color = Color(0xFFFF5722),
                         fontSize = 12.sp,
-
                         fontWeight = FontWeight.Bold
                     )
                 }

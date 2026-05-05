@@ -24,7 +24,8 @@ fun PantallaContacto(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF2D2D30))
-                .padding(24.dp),
+                .padding(24.dp)
+                .padding(top=42.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(24.dp))
