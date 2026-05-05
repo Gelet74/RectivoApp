@@ -1,18 +1,18 @@
 package com.example.rectivoapp.ui.navegacion
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.rectivoapp.ui.pantallas.*
 import com.example.rectivoapp.ui.RectivoViewModel
+import com.example.rectivoapp.ui.pantallas.*
 
 object Rutas {
-
     const val LOGIN = "login"
     const val HOME = "home"
     const val REGISTRO = "registro"
@@ -25,6 +25,7 @@ object Rutas {
     const val CONTACTO = "contacto"
     const val SELECCION_CANTIDAD = "seleccioncantidad"
     const val RESUMEN_PEDIDO = "resumenpedido"
+    const val MIS_PEDIDOS = "mispedidos"
 }
 
 @Composable
@@ -39,7 +40,6 @@ fun NavGraph(
 
         composable(Rutas.LOGIN) {
             Login(
-                viewModel = viewModel,
                 onLoginSuccess = {
                     navController.navigate(Rutas.HOME) {
                         popUpTo(Rutas.LOGIN) { inclusive = true }
@@ -73,7 +73,7 @@ fun NavGraph(
         composable(Rutas.HOME) {
             PantallaHome(
                 onRealizarPedido = { navController.navigate(Rutas.SELECCION_PUERTAS) },
-                onMisPedidos = { /* TODO */ },
+                onMisPedidos = { navController.navigate(Rutas.MIS_PEDIDOS) },
                 onMiPerfil = { navController.navigate(Rutas.PERFIL) },
                 onContacto = { navController.navigate(Rutas.CONTACTO) },
                 onCerrarSesion = {
@@ -85,14 +85,24 @@ fun NavGraph(
             )
         }
 
+        composable(Rutas.MIS_PEDIDOS) {
+            val pedidos by viewModel.pedidosServidor.collectAsState()
+            val cargando by viewModel.pedidosCargando.collectAsState()
+            LaunchedEffect(Unit) { viewModel.cargarPedidosCliente() }
+            PantallaMisPedidos(
+                pedidos = pedidos,
+                cargando = cargando,
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
         composable(Rutas.SELECCION_PUERTAS) {
             PantallaSeleccionPuertas(
                 onVolver = { navController.popBackStack() },
                 on1Puerta = { navController.navigate(Rutas.ARMARIO_1_PUERTA) },
                 on2Puertas = {
-                    val seleccionActual = viewModel.seleccionPedido.value
                     viewModel.actualizarSeleccion(
-                        seleccionActual.copy(puertas = 2, apertura = null)
+                        viewModel.seleccionPedido.value.copy(puertas = 2, apertura = null)
                     )
                     navController.navigate("seleccionmedida/2")
                 }
@@ -103,36 +113,16 @@ fun NavGraph(
             PantallaArmario1Puerta(
                 onVolver = { navController.popBackStack() },
                 onDerecha = {
-                    val seleccionActual = viewModel.seleccionPedido.value
                     viewModel.actualizarSeleccion(
-                        seleccionActual.copy(puertas = 1, apertura = "derecha")
+                        viewModel.seleccionPedido.value.copy(puertas = 1, apertura = "derecha")
                     )
                     navController.navigate("seleccionmedida/1")
                 },
                 onIzquierda = {
-                    val seleccionActual = viewModel.seleccionPedido.value
                     viewModel.actualizarSeleccion(
-                        seleccionActual.copy(puertas = 1, apertura = "izquierda")
+                        viewModel.seleccionPedido.value.copy(puertas = 1, apertura = "izquierda")
                     )
                     navController.navigate("seleccionmedida/1")
-                }
-            )
-        }
-
-        composable(Rutas.RESUMEN_PEDIDO) {
-            val seleccion by viewModel.seleccionPedido.collectAsState()
-            PantallaResumenPedido(
-                seleccion = seleccion,
-                onVolver = { navController.popBackStack() },
-                onConfirmar = { fecha ->
-                    viewModel.confirmarPedido(
-                        fechaEntrega = fecha,
-                        onExito = {
-                            navController.navigate(Rutas.HOME) {
-                                popUpTo(Rutas.HOME) { inclusive = false }
-                            }
-                        }
-                    )
                 }
             )
         }
@@ -146,9 +136,8 @@ fun NavGraph(
                 puertas = puertas,
                 onVolver = { navController.popBackStack() },
                 onMedidaSeleccionada = { medida ->
-                    val seleccionActual = viewModel.seleccionPedido.value
                     viewModel.actualizarSeleccion(
-                        seleccionActual.copy(medida = medida)
+                        viewModel.seleccionPedido.value.copy(medida = medida)
                     )
                     navController.navigate(Rutas.SELECCION_COLOR_ESTRUCTURA)
                 }
@@ -159,9 +148,8 @@ fun NavGraph(
             PantallaSeleccionColor(
                 onVolver = { navController.popBackStack() },
                 onColoresSeleccionados = { estructura, puerta ->
-                    val seleccionActual = viewModel.seleccionPedido.value
                     viewModel.actualizarSeleccion(
-                        seleccionActual.copy(
+                        viewModel.seleccionPedido.value.copy(
                             colorEstructura = estructura,
                             colorPuerta = puerta
                         )
@@ -175,11 +163,36 @@ fun NavGraph(
             PantallaSeleccionCantidad(
                 onVolver = { navController.popBackStack() },
                 onCantidadSeleccionada = { cantidad ->
-                    val seleccionActual = viewModel.seleccionPedido.value
                     viewModel.actualizarSeleccion(
-                        seleccionActual.copy(cantidad = cantidad)
+                        viewModel.seleccionPedido.value.copy(cantidad = cantidad)
                     )
                     navController.navigate(Rutas.RESUMEN_PEDIDO)
+                }
+            )
+        }
+
+        composable(Rutas.RESUMEN_PEDIDO) {
+            val seleccion by viewModel.seleccionPedido.collectAsState()
+            val carrito by viewModel.carrito.collectAsState()
+
+            LaunchedEffect(seleccion.generarCodigo()) {
+                viewModel.resolverPrecio(seleccion.generarCodigo())
+            }
+
+            PantallaResumenPedido(
+                seleccion = seleccion,
+                carrito = carrito,
+                viewModel = viewModel,
+                onVolver = { navController.popBackStack() },
+                onConfirmar = { fecha ->
+                    viewModel.confirmarPedido(
+                        fechaEntrega = fecha,
+                        onExito = {
+                            navController.navigate(Rutas.HOME) {
+                                popUpTo(Rutas.HOME) { inclusive = false }
+                            }
+                        }
+                    )
                 }
             )
         }

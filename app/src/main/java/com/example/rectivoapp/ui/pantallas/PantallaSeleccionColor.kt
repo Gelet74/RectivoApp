@@ -151,7 +151,7 @@ fun TarjetaColor(
                 .background(color, RoundedCornerShape(12.dp))
                 .border(
                     width = if (seleccionado) 4.dp else 1.dp,
-                    color = if (seleccionado) Color(0xFFFF5722) else Color.Gray,
+                    color = if (seleccionado) Color(0xFF4CAF50) else Color.Gray,
                     shape = RoundedCornerShape(12.dp)
                 )
         )

@@ -8,6 +8,6 @@ class RectivoAplicacion : Application() {
     lateinit var contenedor: ContenedorApp
     override fun onCreate() {
         super.onCreate()
-        contenedor = ProductoContenedorApp()
+        contenedor = ProductoContenedorApp(this)
     }
 }

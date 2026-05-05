@@ -16,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.barangellunes"
+        applicationId = "com.example.rectivoapp"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.squareup.okhttp3)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.ui)
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 

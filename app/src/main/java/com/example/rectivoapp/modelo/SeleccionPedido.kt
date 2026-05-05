@@ -6,7 +6,8 @@ data class SeleccionPedido(
     val medida: Int? = null,
     val colorEstructura: String? = null,
     val colorPuerta: String? = null,
-    val cantidad: Int = 1
+    val cantidad: Int = 1,
+    val precioUnitario: Double = 0.0
 ) {
     fun generarCodigo(): String {
         val tipoPuerta = when {

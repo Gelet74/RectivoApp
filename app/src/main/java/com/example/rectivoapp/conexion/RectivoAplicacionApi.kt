@@ -14,6 +14,9 @@ interface RectivoAplicacionApi {
     @GET("articulos")
     suspend fun obtenerProductos(): List<Producto>
 
+    @GET("articulos/codigo/{codigo}")
+    suspend fun obtenerProductoPorCodigo(@Path("codigo") codigo: String): Producto
+
     @GET("clientes")
     suspend fun obtenerClientes(): List<Cliente>
 
