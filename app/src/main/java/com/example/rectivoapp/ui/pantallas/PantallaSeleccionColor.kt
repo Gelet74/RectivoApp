@@ -41,7 +41,7 @@ fun PantallaSeleccionColor(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp, top = 50.dp)
             )
 
             Row(
@@ -71,7 +71,6 @@ fun PantallaSeleccionColor(
                 )
             }
 
-            // COLOR PUERTA (solo visible si se ha elegido estructura)
             if (colorEstructura != null) {
                 Text(
                     text = "Color de la puerta",

@@ -35,7 +35,7 @@ fun PantallaSeleccionCantidad(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(bottom = 40.dp)
+                modifier = Modifier.padding(bottom = 40.dp, top = 50.dp)
             )
 
             Row(

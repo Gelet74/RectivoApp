@@ -89,19 +89,19 @@ fun PantallaResumenPedido(
         else -> R.drawable.blanco_40_50
     }
 
-    PantallaConAppBar(titulo = "Resumen del Pedido", onVolver = onVolver) {
+    PantallaConAppBar(titulo = "Resumen del Pedido", onVolver = onVolver) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF2D2D30))
-                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
         ) {
 
             // ── Cabecera: imagen + código ──
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(340.dp)
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
                     .background(Color(0xFF2D2D30)),
                 contentAlignment = Alignment.Center
@@ -110,8 +110,8 @@ fun PantallaResumenPedido(
                     painter = painterResource(id = imagenRes),
                     contentDescription = "Imagen del armario",
                     modifier = Modifier
-                        .fillMaxSize()
-                        .scale(0.85f)
+                        .fillMaxWidth()
+                        .heightIn(max = 260.dp)
                         .graphicsLayer {
                             scaleX = if (esEspejado) -1f else 1f
                         },
